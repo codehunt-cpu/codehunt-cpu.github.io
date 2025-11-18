@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>COSMIC COLLECTOR // Neural Space Command v3.0</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Animated Background Layers -->
+    <div class="cosmic-bg">
+        <div class="nebula-layer"></div>
+        <div class="stars-layer"></div>
+        <div class="grid-overlay"></div>
+    </div>
+
+    <div class="game-container">
+        <!-- Enhanced HUD Header -->
+        <div class="hud-header">
+            <div class="hud-panel score-panel">
+                <div class="panel-glow"></div>
+                <div class="panel-content">
+                    <div class="hud-label">
+                        <span class="icon">◈</span>
+                        <span>SCORE</span>
+                    </div>
+                    <div class="hud-value" id="score">0</div>
+                    <div class="combo-display" id="comboDisplay"></div>
+                </div>
+            </div>
+            
+            <div class="hud-panel center-panel">
+                <div class="panel-glow"></div>
+                <div class="panel-content">
+                    <div class="wave-display" id="waveDisplay">WAVE 1</div>
+                    <div class="game-mode-badge" id="modeDisplay">CLASSIC</div>
+                    <div class="high-score-text">BEST <span id="highScore">0</span></div>
+                </div>
+            </div>
+            
+            <div class="hud-panel lives-panel">
+                <div class="panel-glow"></div>
+                <div class="panel-content">
+                    <div class="hud-label">
+                        <span>HULL</span>
+                        <span class="icon">◆</span>
+                    </div>
+                    <div class="lives-display" id="lives">
+                        <span class="life-bar"></span>
+                        <span class="life-bar"></span>
+                        <span class="life-bar"></span>
+                    </div>
+                    <div class="currency-display" id="currencyDisplay">💎 <span id="currency">0</span></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Boss Health Bar -->
+        <div class="boss-health-container hidden" id="bossHealthContainer">
+            <div class="boss-name" id="bossName">MEGA ASTEROID</div>
+            <div class="boss-health-bar">
+                <div class="boss-health-fill" id="bossHealthFill"></div>
+                <div class="boss-health-text" id="bossHealthText">100%</div>
+            </div>
+        </div>
+        
+        <!-- Wave Transition -->
+        <div class="wave-transition hidden" id="waveTransition">
+            <div class="wave-transition-content">
+                <div class="wave-number" id="waveNumber">WAVE 2</div>
+                <div class="wave-subtitle" id="waveSubtitle">INCOMING</div>
+            </div>
+        </div>
+        
+        <!-- Score Popup Container -->
+        <div class="score-popups" id="scorePopups"></div>
+        
+        <!-- Chain Reaction Display -->
+        <div class="chain-display hidden" id="chainDisplay">
+            <span class="chain-text">CHAIN</span>
+            <span class="chain-count" id="chainCount">×2</span>
+        </div>
+        
+        <!-- Enhanced Control Buttons -->
+        <div class="game-controls">
+            <button class="ctrl-btn" id="settingsButton" title="Settings">
+                <span class="btn-glow"></span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M12 1v6m0 6v6M23 12h-6m-6 0H1"/>
+                </svg>
+            </button>
+            <button class="ctrl-btn" id="pauseButton" title="Pause (P)">
+                <span class="btn-glow"></span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="6" y="4" width="4" height="16" rx="1"/>
+                    <rect x="14" y="4" width="4" height="16" rx="1"/>
+                </svg>
+            </button>
+            <button class="ctrl-btn" id="muteButton" title="Mute (M)">
+                <span class="btn-glow"></span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+                    <path d="M15.54 8.46a5 5 0 010 7.07"/>
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Game Canvas -->
+        <div class="canvas-wrapper">
+            <canvas id="gameCanvas"></canvas>
+            <div class="scan-line"></div>
+        </div>
+        
+        <!-- Active Power-ups HUD -->
+        <div class="active-powerups" id="activePowerups"></div>
+        
+        <!-- START SCREEN -->
+        <div class="modal-screen start-screen" id="startScreen">
+            <div class="screen-bg"></div>
+            <div class="screen-content">
+                <div class="logo-container">
+                    <h1 class="game-logo">
+                        <span class="logo-line">COSMIC</span>
+                        <span class="logo-line main">COLLECTOR</span>
+                    </h1>
+                    <div class="logo-subtitle">// NEURAL SPACE COMMAND v2.0</div>
+                </div>
+                
+                <div class="profile-section">
+                    <label class="input-label">PILOT ID</label>
+                    <input type="text" id="playerName" placeholder="Enter callsign" maxlength="15" value="Pilot">
+                </div>
+                
+                <div class="selection-group">
+                    <h3 class="section-title">MISSION DIFFICULTY</h3>
+                    <div class="difficulty-grid">
+                        <button class="diff-card active" data-difficulty="easy">
+                            <div class="card-icon easy">◐</div>
+                            <div class="card-label">RECRUIT</div>
+                            <div class="card-stats">5 Lives • Standard Spawn</div>
+                        </button>
+                        <button class="diff-card" data-difficulty="medium">
+                            <div class="card-icon medium">◑</div>
+                            <div class="card-label">VETERAN</div>
+                            <div class="card-stats">3 Lives • Increased Spawn</div>
+                        </button>
+                        <button class="diff-card" data-difficulty="hard">
+                            <div class="card-icon hard">◕</div>
+                            <div class="card-label">ELITE</div>
+                            <div class="card-stats">2 Lives • Max Difficulty</div>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="selection-group">
+                    <h3 class="section-title">SHIP CONFIGURATION</h3>
+                    <div class="ship-palette">
+                        <button class="color-chip active" data-color="blue" style="--chip-color: #4fc3f7"></button>
+                        <button class="color-chip" data-color="red" style="--chip-color: #ff6b6b"></button>
+                        <button class="color-chip" data-color="green" style="--chip-color: #51cf66"></button>
+                        <button class="color-chip" data-color="purple" style="--chip-color: #cc5de8"></button>
+                        <button class="color-chip" data-color="gold" style="--chip-color: #ffd700"></button>
+                    </div>
+                </div>
+                
+                <div class="briefing-section">
+                    <h3 class="section-title">MISSION BRIEFING</h3>
+                    <div class="briefing-grid">
+                        <div class="briefing-item">
+                            <span class="item-icon star">✦</span>
+                            <span>Standard Star +10</span>
+                        </div>
+                        <div class="briefing-item">
+                            <span class="item-icon rainbow">✧</span>
+                            <span>Rare Star +50</span>
+                        </div>
+                        <div class="briefing-item">
+                            <span class="item-icon freeze">◬</span>
+                            <span>Time Freeze</span>
+                        </div>
+                        <div class="briefing-item">
+                            <span class="item-icon hazard">◆</span>
+                            <span>Asteroid Hazard</span>
+                        </div>
+                        <div class="briefing-item">
+                            <span class="item-icon shield">⬡</span>
+                            <span>Shield (5s)</span>
+                        </div>
+                        <div class="briefing-item">
+                            <span class="item-icon magnet">⬢</span>
+                            <span>Magnet Field</span>
+                        </div>
+                    </div>
+                    <div class="controls-hint">
+                        <span>⌨ WASD / Arrow Keys</span>
+                        <span>⏸ P to Pause</span>
+                        <span>🔇 M to Mute</span>
+                    </div>
+                </div>
+                
+                <button class="primary-btn" id="startButton">
+                    <span class="btn-bg"></span>
+                    <span class="btn-text">INITIATE MISSION</span>
+                </button>
+                
+                <button class="secondary-btn" id="showLeaderboard">
+                    <span class="btn-text">▸ VIEW LEADERBOARD</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- PAUSE SCREEN -->
+        <div class="modal-screen pause-screen hidden" id="pauseScreen">
+            <div class="screen-bg"></div>
+            <div class="screen-content">
+                <h1 class="modal-title">MISSION PAUSED</h1>
+                <p class="modal-subtitle">System on standby</p>
+                <button class="primary-btn" id="resumeButton">
+                    <span class="btn-bg"></span>
+                    <span class="btn-text">RESUME</span>
+                </button>
+                <button class="secondary-btn danger" id="quitButton">
+                    <span class="btn-text">ABORT MISSION</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- GAME OVER SCREEN -->
+        <div class="modal-screen gameover-screen hidden" id="gameOverScreen">
+            <div class="screen-bg"></div>
+            <div class="screen-content">
+                <h1 class="modal-title">MISSION COMPLETE</h1>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">FINAL SCORE</div>
+                        <div class="stat-value" id="finalScore">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">MAX COMBO</div>
+                        <div class="stat-value" id="finalCombo">0</div>
+                    </div>
+                </div>
+                <div id="newHighScore" class="achievement-banner hidden">
+                    <span class="banner-glow"></span>
+                    ⚡ NEW HIGH SCORE ⚡
+                </div>
+                <div id="achievements" class="achievements-list"></div>
+                <button class="primary-btn" id="restartButton">
+                    <span class="btn-bg"></span>
+                    <span class="btn-text">REPLAY MISSION</span>
+                </button>
+                    <button class="primary-btn" id="replayButton">
+                        <span class="btn-bg"></span>
+                        <span class="btn-text">▶ WATCH REPLAY</span>
+                    </button>
+                <button class="secondary-btn" id="menuButton">
+                    <span class="btn-text">RETURN TO BASE</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- LEADERBOARD SCREEN -->
+        <div class="modal-screen leaderboard-screen hidden" id="leaderboardScreen">
+            <div class="screen-bg"></div>
+            <div class="screen-content">
+                <h1 class="modal-title">TOP COMMANDERS</h1>
+                <div class="leaderboard-container" id="leaderboardList"></div>
+                <button class="primary-btn" id="backToMenu">
+                    <span class="btn-bg"></span>
+                    <span class="btn-text">RETURN</span>
+                </button>
+                <button class="secondary-btn danger" id="clearLeaderboard">
+                    <span class="btn-text">CLEAR RECORDS</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Achievement Toast -->
+        <div class="achievement-toast hidden" id="achievementPopup">
+            <div class="toast-glow"></div>
+            <div class="toast-icon">⚡</div>
+            <div class="toast-text" id="achievementText"></div>
+        </div>
+        
+        <!-- Mobile Controls -->
+        <div class="mobile-controls hidden" id="mobileControls">
+            <button class="mobile-shoot-btn" id="mobileShootBtn">
+                <span class="shoot-icon">⚡</span>
+            </button>
+        </div>
+        
+        <!-- MAIN MENU (Enhanced Start Screen) -->
+        <div class="modal-screen main-menu-screen" id="mainMenuScreen">
+            <div class="screen-bg"></div>
+            <div class="screen-content">
+                <div class="logo-container">
+                    <h1 class="game-logo">
+                        <span class="logo-line">COSMIC</span>
+                        <span class="logo-line main">COLLECTOR</span>
+                    </h1>
+                    <div class="logo-subtitle">// NEURAL SPACE COMMAND v3.0</div>
+                </div>
+                
+                <div class="main-menu-grid">
+                    <button class="menu-card" id="playButton">
+                        <div class="menu-card-icon">▶</div>
+                        <div class="menu-card-label">PLAY</div>
+                    </button>
+                    <button class="menu-card" id="upgradesButton">
+                        <div class="menu-card-icon">⚡</div>
+                        <div class="menu-card-label">UPGRADES</div>
+                    </button>
+                    <button class="menu-card" id="challengesButton">
+                        <div class="menu-card-icon">🎯</div>
+                        <div class="menu-card-label">CHALLENGES</div>
+                    </button>
+                    <button class="menu-card" id="statsButton">
+                        <div class="menu-card-icon">📊</div>
+                        <div class="menu-card-label">STATS</div>
+                    </button>
+                    <button class="menu-card" id="gameModeButton">
+                        <div class="menu-card-icon">🎮</div>
+                        <div class="menu-card-label">MODES</div>
+                    </button>
+                    <button class="menu-card" id="settingsButtonMenu">
+                        <div class="menu-card-icon">⚙</div>
+                        <div class="menu-card-label">SETTINGS</div>
+                    </button>
+                </div>
+                
+                <div class="streak-display">
+                    <span class="streak-icon">🔥</span>
+                    <span class="streak-text">STREAK: <span id="streakCount">0</span> DAYS</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- GAME MODE SELECTION -->
+        <div class="modal-screen mode-screen hidden" id="modeScreen">
+            <div class="screen-bg"></div>
+            <div class="screen-content">
+                <h1 class="modal-title">SELECT GAME MODE</h1>
+                
+                <div class="mode-grid">
+                    <button class="mode-card" data-mode="classic">
+                        <div class="mode-icon">🚀</div>
+                        <div class="mode-name">CLASSIC</div>
+                        <div class="mode-desc">Original survival mode</div>
+                    </button>
+                    <button class="mode-card" data-mode="timeattack">
+                        <div class="mode-icon">⏱</div>
+                        <div class="mode-name">TIME ATTACK</div>
+                        <div class="mode-desc">60 second sprint</div>
+                    </button>
+                    <button class="mode-card" data-mode="zen">
+                        <div class="mode-icon">🧘</div>
+                        <div class="mode-name">ZEN MODE</div>
+                        <div class="mode-desc">Peaceful collection</div>
+                    </button>
+                    <button class="mode-card" data-mode="onelife">
+                        <div class="mode-icon">💀</div>
+                        <div class="mode-name">ONE LIFE</div>
+                        <div class="mode-desc">Hardcore challenge</div>
+                    </button>
+                    <button class="mode-card" data-mode="collection">
+                        <div class="mode-icon">🌟</div>
+                        <div class="mode-name">COLLECTION</div>
+                        <div class="mode-desc">Objective-based</div>
+                    </button>
+                    <button class="mode-card" data-mode="coop">
+                        <div class="mode-icon">👥</div>
+                        <div class="mode-name">CO-OP</div>
+                        <div class="mode-desc">Local 2-player</div>
+                    </button>
+                </div>
+                
+                <button class="secondary-btn" id="backFromMode">
+                    <span class="btn-text">← BACK</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- SHIP SELECTION & CONFIG -->
+        <div class="modal-screen start-screen hidden" id="startScreen">
+            <div class="screen-bg"></div>
+            <div class="screen-content">
+                <h1 class="modal-title">MISSION BRIEFING</h1>
+                
+                <div class="profile-section">
+                    <label class="input-label">PILOT CALLSIGN</label>
+                    <input type="text" id="playerName" placeholder="Enter callsign" maxlength="15" value="Pilot">
+                </div>
+                
+                <div class="selection-group">
+                    <h3 class="section-title">SELECT SHIP</h3>
+                    <div class="ships-grid" id="shipsGrid">
+                        <div class="ship-card unlocked active" data-ship="striker">
+                            <div class="ship-visual">🚀</div>
+                            <div class="ship-name">STRIKER</div>
+                            <div class="ship-stats">
+                                <div>Speed: ★★★☆☆</div>
+                                <div>Lives: ★★★★☆</div>
+                            </div>
+                        </div>
+                        <div class="ship-card locked" data-ship="tank" data-unlock="500">
+                            <div class="ship-visual">🛸</div>
+                            <div class="ship-name">TANK</div>
+                            <div class="ship-stats">
+                                <div>Speed: ★★☆☆☆</div>
+                                <div>Lives: ★★★★★</div>
+                            </div>
+                            <div class="unlock-requirement">🔒 500pts</div>
+                        </div>
+                        <div class="ship-card locked" data-ship="speedster" data-unlock="1000">
+                            <div class="ship-visual">⚡</div>
+                            <div class="ship-name">SPEEDSTER</div>
+                            <div class="ship-stats">
+                                <div>Speed: ★★★★★</div>
+                                <div>Lives: ★★☆☆☆</div>
+                            </div>
+                            <div class="unlock-requirement">🔒 1000pts</div>
+                        </div>
+                        <div class="ship-card locked" data-ship="fortress" data-unlock="2000">
+                            <div class="ship-visual">🛡</div>
+                            <div class="ship-name">FORTRESS</div>
+                            <div class="ship-stats">
+                                <div>Speed: ★☆☆☆☆</div>
+                                <div>Lives: ★★★★★</div>
+                            </div>
+                            <div class="unlock-requirement">🔒 2000pts</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="selection-group">
+                    <h3 class="section-title">DIFFICULTY</h3>
+                    <div class="difficulty-grid">
+                        <button class="diff-card active" data-difficulty="easy">
+                            <div class="card-icon easy">◐</div>
+                            <div class="card-label">RECRUIT</div>
+                        </button>
+                        <button class="diff-card" data-difficulty="medium">
+                            <div class="card-icon medium">◑</div>
+                            <div class="card-label">VETERAN</div>
+                        </button>
+                        <button class="diff-card" data-difficulty="hard">
+                            <div class="card-icon hard">◕</div>
+                            <div class="card-label">ELITE</div>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="selection-group">
+                    <h3 class="section-title">COLOR SCHEME</h3>
+                    <div class="ship-palette">
+                        <button class="color-chip active" data-color="blue" style="--chip-color: #4fc3f7"></button>
+                        <button class="color-chip" data-color="red" style="--chip-color: #ff6b6b"></button>
+                        <button class="color-chip" data-color="green" style="--chip-color: #51cf66"></button>
+                        <button class="color-chip" data-color="purple" style="--chip-color: #cc5de8"></button>
+                        <button class="color-chip" data-color="gold" style="--chip-color: #ffd700"></button>
+                    </div>
+                </div>
+                
+                <button class="primary-btn" id="startButton">
+                    <span class="btn-bg"></span>
+                    <span class="btn-text">LAUNCH MISSION</span>
+                </button>
+                
+                <button class="secondary-btn" id="backToMainMenu">
+                    <span class="btn-text">← BACK</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- UPGRADES SCREEN -->
+        <div class="modal-screen upgrades-screen hidden" id="upgradesScreen">
+            <div class="screen-bg"></div>
+            <div class="screen-content">
+                <h1 class="modal-title">SHIP UPGRADES</h1>
+                <div class="currency-big">💎 <span id="currencyBig">0</span> CREDITS</div>
+                
+                <div class="upgrades-grid">
+                    <div class="upgrade-card" data-upgrade="maxlives">
+                        <div class="upgrade-icon">❤</div>
+                        <div class="upgrade-info">
+                            <div class="upgrade-name">MAX HULL</div>
+                            <div class="upgrade-desc">+1 starting life</div>
+                            <div class="upgrade-level">Level: <span class="level-value">0</span>/5</div>
+                        </div>
+                        <button class="upgrade-btn" data-cost="100">
+                            <span class="btn-text">100 💎</span>
+                        </button>
+                    </div>
+                    
+                    <div class="upgrade-card" data-upgrade="magnetrange">
+                        <div class="upgrade-icon">🧲</div>
+                        <div class="upgrade-info">
+                            <div class="upgrade-name">MAGNET RANGE</div>
+                            <div class="upgrade-desc">+20% attraction radius</div>
+                            <div class="upgrade-level">Level: <span class="level-value">0</span>/5</div>
+                        </div>
+                        <button class="upgrade-btn" data-cost="80">
+                            <span class="btn-text">80 💎</span>
+                        </button>
+                    </div>
+                    
+                    <div class="upgrade-card" data-upgrade="powerupduration">
+                        <div class="upgrade-icon">⏳</div>
+                        <div class="upgrade-info">
+                            <div class="upgrade-name">POWERUP TIME</div>
+                            <div class="upgrade-desc">+1s duration</div>
+                            <div class="upgrade-level">Level: <span class="level-value">0</span>/5</div>
+                        </div>
+                        <button class="upgrade-btn" data-cost="120">
+                            <span class="btn-text">120 💎</span>
+                        </button>
+                    </div>
+                    
+                    <div class="upgrade-card" data-upgrade="speed">
+                        <div class="upgrade-icon">⚡</div>
+                        <div class="upgrade-info">
+                            <div class="upgrade-name">ENGINE BOOST</div>
+                            <div class="upgrade-desc">+10% ship speed</div>
+                            <div class="upgrade-level">Level: <span class="level-value">0</span>/5</div>
+                        </div>
+                        <button class="upgrade-btn" data-cost="150">
+                            <span class="btn-text">150 💎</span>
+                        </button>
+                    </div>
+                    
+                    <div class="upgrade-card" data-upgrade="weaponpower">
+                        <div class="upgrade-icon">🔫</div>
+                        <div class="upgrade-info">
+                            <div class="upgrade-name">WEAPON DAMAGE</div>
+                            <div class="upgrade-desc">+25% damage output</div>
+                            <div class="upgrade-level">Level: <span class="level-value">0</span>/5</div>
+                        </div>
+                        <button class="upgrade-btn" data-cost="200">
+                            <span class="btn-text">200 💎</span>
+                        </button>
+                    </div>
+                    
+                    <div class="upgrade-card" data-upgrade="firerate">
+                        <div class="upgrade-icon">🎯</div>
+                        <div class="upgrade-info">
+                            <div class="upgrade-name">FIRE RATE</div>
+                            <div class="upgrade-desc">+15% faster shooting</div>
+                            <div class="upgrade-level">Level: <span class="level-value">0</span>/5</div>
+                        </div>
+                        <button class="upgrade-btn" data-cost="180">
+                            <span class="btn-text">180 💎</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <button class="secondary-btn" id="backFromUpgrades">
+                    <span class="btn-text">← BACK</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- CHALLENGES SCREEN -->
+        <div class="modal-screen challenges-screen hidden" id="challengesScreen">
+            <div class="screen-bg"></div>
+            <div class="screen-content">
+                <h1 class="modal-title">DAILY CHALLENGES</h1>
+                <div class="daily-refresh">Resets in: <span id="challengeTimer">23:45:12</span></div>
+                
+                <div class="challenges-list">
+                    <div class="challenge-card" data-challenge="stars50">
+                        <div class="challenge-icon">⭐</div>
+                        <div class="challenge-info">
+                            <div class="challenge-name">Star Collector</div>
+                            <div class="challenge-desc">Collect 50 stars in one run</div>
+                            <div class="challenge-progress">
+                                <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div>
+                                <div class="progress-text">0/50</div>
+                            </div>
+                        </div>
+                        <div class="challenge-reward">
+                            <div class="reward-badge">🏆</div>
+                            <div class="reward-value">+250💎</div>
+                        </div>
+                    </div>
+                    
+                    <div class="challenge-card" data-challenge="flawless">
+                        <div class="challenge-icon">💯</div>
+                        <div class="challenge-info">
+                            <div class="challenge-name">Flawless Victory</div>
+                            <div class="challenge-desc">Score 100 without taking damage</div>
+                            <div class="challenge-progress">
+                                <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div>
+                                <div class="progress-text">Incomplete</div>
+                            </div>
+                        </div>
+                        <div class="challenge-reward">
+                            <div class="reward-badge">🏆</div>
+                            <div class="reward-value">+500💎</div>
+                        </div>
+                    </div>
+                    
+                    <div class="challenge-card" data-challenge="survive2min">
+                        <div class="challenge-icon">⏱</div>
+                        <div class="challenge-info">
+                            <div class="challenge-name">Survivor</div>
+                            <div class="challenge-desc">Survive 2 minutes on hard mode</div>
+                            <div class="challenge-progress">
+                                <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div>
+                                <div class="progress-text">0:00/2:00</div>
+                            </div>
+                        </div>
+                        <div class="challenge-reward">
+                            <div class="reward-badge">🏆</div>
+                            <div class="reward-value">+800💎</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="secondary-btn" id="backFromChallenges">
+                    <span class="btn-text">← BACK</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- STATISTICS SCREEN -->
+        <div class="modal-screen stats-screen hidden" id="statsScreen">
+            <div class="screen-bg"></div>
+            <div class="screen-content">
+                <h1 class="modal-title">PILOT STATISTICS</h1>
+                
+                <div class="stats-overview">
+                    <div class="stat-box">
+                        <div class="stat-value" id="totalGames">0</div>
+                        <div class="stat-label">Total Missions</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="totalScore">0</div>
+                        <div class="stat-label">Total Score</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="avgScore">0</div>
+                        <div class="stat-label">Avg Score</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="totalStars">0</div>
+                        <div class="stat-label">Stars Collected</div>
+                    </div>
+                </div>
+                
+                <div class="stats-detailed">
+                    <div class="stat-row">
+                        <span class="stat-name">Highest Combo:</span>
+                        <span class="stat-value-inline" id="highestCombo">0×</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-name">Bosses Defeated:</span>
+                        <span class="stat-value-inline" id="bossesDefeated">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-name">Longest Streak:</span>
+                        <span class="stat-value-inline" id="longestStreak">0 days</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-name">Total Playtime:</span>
+                        <span class="stat-value-inline" id="totalPlaytime">0h 0m</span>
+                    </div>
+                </div>
+                
+                <button class="primary-btn" id="showLeaderboard">
+                    <span class="btn-bg"></span>
+                    <span class="btn-text">VIEW LEADERBOARD</span>
+                </button>
+                
+                <button class="secondary-btn" id="backFromStats">
+                    <span class="btn-text">← BACK</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- SETTINGS SCREEN -->
+        <div class="modal-screen settings-screen hidden" id="settingsScreen">
+            <div class="screen-bg"></div>
+            <div class="screen-content">
+                <h1 class="modal-title">SETTINGS</h1>
+                
+                <div class="settings-group">
+                    <h3 class="section-title">AUDIO</h3>
+                    <div class="setting-row">
+                        <label>Master Volume</label>
+                        <input type="range" id="masterVolume" min="0" max="100" value="70" class="volume-slider">
+                        <span class="volume-value">70%</span>
+                    </div>
+                    <div class="setting-row">
+                        <label>SFX Volume</label>
+                        <input type="range" id="sfxVolume" min="0" max="100" value="70" class="volume-slider">
+                        <span class="volume-value">70%</span>
+                    </div>
+                </div>
+                
+                <div class="settings-group">
+                    <h3 class="section-title">GRAPHICS</h3>
+                    <div class="setting-row">
+                        <label>Effects Quality</label>
+                        <select id="graphicsQuality" class="settings-select">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="setting-row">
+                        <label>Screen Shake</label>
+                        <input type="checkbox" id="screenShake" checked class="settings-checkbox">
+                    </div>
+                    <div class="setting-row">
+                        <label>Particle Effects</label>
+                        <input type="checkbox" id="particleEffects" checked class="settings-checkbox">
+                    </div>
+                </div>
+                
+                <div class="settings-group">
+                    <h3 class="section-title">UI THEME</h3>
+                    <div class="theme-selector">
+                        <button class="theme-chip active" data-theme="default">
+                            <div class="theme-preview" style="background: linear-gradient(45deg, #00d9ff, #9d4edd)"></div>
+                            <div class="theme-name">Default</div>
+                        </button>
+                        <button class="theme-chip" data-theme="cyberpunk">
+                            <div class="theme-preview" style="background: linear-gradient(45deg, #ff00ff, #00ff00)"></div>
+                            <div class="theme-name">Cyberpunk</div>
+                        </button>
+                        <button class="theme-chip" data-theme="retro">
+                            <div class="theme-preview" style="background: linear-gradient(45deg, #ff6b6b, #ffd700)"></div>
+                            <div class="theme-name">Retro</div>
+                        </button>
+                        <button class="theme-chip" data-theme="vaporwave">
+                            <div class="theme-preview" style="background: linear-gradient(45deg, #ff71ce, #01cdfe)"></div>
+                            <div class="theme-name">Vaporwave</div>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="settings-group">
+                    <h3 class="section-title">CONTROLS</h3>
+                    <div class="controls-info">
+                        <div>Movement: WASD / Arrow Keys</div>
+                        <div>Shoot: SPACEBAR / Click</div>
+                        <div>Pause: P</div>
+                        <div>Mute: M</div>
+                    </div>
+                </div>
+                
+                <button class="primary-btn" id="tutorialButton">
+                    <span class="btn-bg"></span>
+                    <span class="btn-text">VIEW TUTORIAL</span>
+                </button>
+                
+                <button class="secondary-btn" id="backFromSettings">
+                    <span class="btn-text">← BACK</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- TUTORIAL SCREEN -->
+        <div class="modal-screen tutorial-screen hidden" id="tutorialScreen">
+            <div class="screen-bg"></div>
+            <div class="screen-content">
+                <h1 class="modal-title">MISSION TUTORIAL</h1>
+                
+                <div class="tutorial-step active" data-step="1">
+                    <div class="tutorial-visual">🚀</div>
+                    <h3 class="tutorial-heading">MOVEMENT</h3>
+                    <p class="tutorial-text">Use WASD or Arrow Keys to navigate your ship through space. Avoid asteroids and collect stars!</p>
+                </div>
+                
+                <div class="tutorial-step" data-step="2">
+                    <div class="tutorial-visual">⚡</div>
+                    <h3 class="tutorial-heading">COMBAT</h3>
+                    <p class="tutorial-text">Press SPACEBAR or TAP to fire weapons. Destroy asteroids and enemies for bonus points!</p>
+                </div>
+                
+                <div class="tutorial-step" data-step="3">
+                    <div class="tutorial-visual">✨</div>
+                    <h3 class="tutorial-heading">POWERUPS</h3>
+                    <p class="tutorial-text">Collect powerups for shields, magnets, and speed boosts. Chain combos for multipliers!</p>
+                </div>
+                
+                <div class="tutorial-step" data-step="4">
+                    <div class="tutorial-visual">👹</div>
+                    <h3 class="tutorial-heading">BOSS BATTLES</h3>
+                    <p class="tutorial-text">Every 100 points, face a massive boss! Deplete its health bar to earn huge rewards.</p>
+                </div>
+                
+                <div class="tutorial-nav">
+                    <button class="tutorial-btn" id="tutorialPrev">← PREV</button>
+                    <div class="tutorial-dots">
+                        <span class="dot active"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                    </div>
+                    <button class="tutorial-btn" id="tutorialNext">NEXT →</button>
+                </div>
+                
+                <button class="primary-btn" id="closeTutorial">
+                    <span class="btn-bg"></span>
+                    <span class="btn-text">GOT IT!</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- PAUSE SCREEN -->
+        <div class="modal-screen pause-screen hidden" id="pauseScreen">
+            <div class="screen-bg"></div>
+            <div class="screen-content">
+                <h1 class="modal-title">MISSION PAUSED</h1>
+                <p class="modal-subtitle">System on standby</p>
+                <button class="primary-btn" id="resumeButton">
+                    <span class="btn-bg"></span>
+                    <span class="btn-text">RESUME</span>
+                </button>
+                <button class="secondary-btn" id="restartFromPause">
+                    <span class="btn-text">RESTART MISSION</span>
+                </button>
+                <button class="secondary-btn danger" id="quitButton">
+                    <span class="btn-text">ABORT MISSION</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- GAME OVER SCREEN -->
+        <div class="modal-screen gameover-screen hidden" id="gameOverScreen">
+            <div class="screen-bg"></div>
+            <div class="screen-content">
+                <h1 class="modal-title">MISSION COMPLETE</h1>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">FINAL SCORE</div>
+                        <div class="stat-value" id="finalScore">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">MAX COMBO</div>
+                        <div class="stat-value" id="finalCombo">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">WAVE REACHED</div>
+                        <div class="stat-value" id="finalWave">1</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">CREDITS EARNED</div>
+                        <div class="stat-value" id="creditsEarned">+0💎</div>
+                    </div>
+                </div>
+                <div id="newHighScore" class="achievement-banner hidden">
+                    <span class="banner-glow"></span>
+                    ⚡ NEW HIGH SCORE ⚡
+                </div>
+                <div id="achievements" class="achievements-list"></div>
+                
+                <button class="primary-btn" id="shareButton">
+                    <span class="btn-bg"></span>
+                    <span class="btn-text">📤 SHARE SCORE</span>
+                </button>
+                
+                <button class="primary-btn" id="restartButton">
+                    <span class="btn-bg"></span>
+                    <span class="btn-text">REPLAY MISSION</span>
+                </button>
+                <button class="secondary-btn" id="menuButton">
+                    <span class="btn-text">RETURN TO BASE</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- LEADERBOARD SCREEN -->
+        <div class="modal-screen leaderboard-screen hidden" id="leaderboardScreen">
+            <div class="screen-bg"></div>
+            <div class="screen-content">
+                <h1 class="modal-title">TOP COMMANDERS</h1>
+                
+                <div class="leaderboard-tabs">
+                    <button class="lb-tab active" data-mode="classic">CLASSIC</button>
+                    <button class="lb-tab" data-mode="timeattack">TIME ATTACK</button>
+                    <button class="lb-tab" data-mode="onelife">ONE LIFE</button>
+                </div>
+                
+                <div class="leaderboard-container" id="leaderboardList"></div>
+                <button class="primary-btn" id="backToMenu">
+                    <span class="btn-bg"></span>
+                    <span class="btn-text">RETURN</span>
+                </button>
+                <button class="secondary-btn danger" id="clearLeaderboard">
+                    <span class="btn-text">CLEAR RECORDS</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- SHARE MODAL -->
+        <div class="modal-screen share-screen hidden" id="shareScreen">
+            <div class="screen-bg"></div>
+            <div class="screen-content">
+                <h1 class="modal-title">SHARE YOUR SCORE</h1>
+                
+                <div class="share-card" id="shareCard">
+                    <div class="share-title">COSMIC COLLECTOR</div>
+                    <div class="share-score" id="shareScoreText">Score: 0</div>
+                    <div class="share-details">
+                        <div>Wave: <span id="shareWave">1</span></div>
+                        <div>Mode: <span id="shareMode">Classic</span></div>
+                    </div>
+                    <div class="share-footer">Neural Space Command v3.0</div>
+                </div>
+                
+                <div class="share-buttons">
+                    <button class="share-btn twitter">🐦 Twitter</button>
+                    <button class="share-btn facebook">📘 Facebook</button>
+                    <button class="share-btn copy" id="copyScore">📋 Copy</button>
+                </div>
+                
+                <button class="secondary-btn" id="closeShare">
+                    <span class="btn-text">CLOSE</span>
+                </button>
+            </div>
+        </div>
+        
+    </div>
+    
+    <script src="game.js"></script>
+</body>
+</html>
+
